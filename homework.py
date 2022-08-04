@@ -6,7 +6,10 @@ import time
 import telegram
 from http import HTTPStatus
 
-import simplejson
+try:
+    from simplejson.errors import JSONDecodeError
+except ImportError:
+    from json.decoder import JSONDecodeError
 import requests
 from dotenv import load_dotenv
 
@@ -61,7 +64,7 @@ def get_api_answer(current_timestamp):
         raise exceptions.APIUnexpectedHTTPStatus(message)
     try:
         return response.json()
-    except simplejson.errors.JSONDecodeError:
+    except JSONDecodeError:
         logger.error('Формат не Json')
 
 
