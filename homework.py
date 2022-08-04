@@ -116,7 +116,7 @@ def main():
         raise UnavailableToken(message)
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = 0
+    current_timestamp = int(time.time() - 2629743)
     last_hw_status = ''
 
     while True:
