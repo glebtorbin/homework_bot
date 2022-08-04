@@ -20,7 +20,7 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-TELEGRAM_RETRY_TIME: int = 600
+RETRY_TIME: int = 600
 ENDPOINT = os.getenv('ENDPOINT')
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -138,7 +138,7 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
         finally:
-            time.sleep(TELEGRAM_RETRY_TIME)
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ class APIFormatError(Exception):
 
 class UnavailableToken(Exception):
     pass
+
 class NotWorkingError(Exception):
     pass
 
