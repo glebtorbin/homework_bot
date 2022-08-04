@@ -25,7 +25,7 @@ ENDPOINT = os.getenv('ENDPOINT')
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_VERDICTS = {
+HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -95,8 +95,8 @@ def parse_status(homework: dict):
     except KeyError as error:
         message = f'Ошибка доступа по ключу status: {error}'
         logger.error(message)
-    verdict = HOMEWORK_VERDICTS[homework_status]
-    if homework_status not in HOMEWORK_VERDICTS:
+    verdict = HOMEWORK_STATUSES[homework_status]
+    if homework_status not in HOMEWORK_STATUSES:
         message = 'Ключ из homewor_status не обнаружен в  HOMEWORK_VERDICTS'
         logger.error(message)
         raise KeyNotFoundError(message)
