@@ -14,3 +14,6 @@ class UnavailableToken(Exception):
     pass
 class NotWorkingError(Exception):
     pass
+
+class JSONError(Exception):
+    pass
