@@ -6,14 +6,13 @@ import time
 import telegram
 from http import HTTPStatus
 
-try:
-    from simplejson.errors import JSONDecodeError
-except ImportError:
-    from json.decoder import JSONDecodeError
+
+from simplejson.errors import JSONDecodeError
 import requests
 from dotenv import load_dotenv
 
 import exceptions
+
 load_dotenv()
 
 
@@ -117,7 +116,7 @@ def main():
         raise exceptions.UnavailableToken(message)
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time() - 604800)
+    current_timestamp = 0
     last_hw_status = ''
 
     while True:
