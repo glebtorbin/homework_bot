@@ -9,7 +9,9 @@ from http import HTTPStatus
 import requests
 from dotenv import load_dotenv
 
-import exceptions
+from exceptions import (APIFormatError, APIUnexpectedHTTPStatus,
+                        JSONError, KeyNotFoundError,
+                        MessageSendError, NotWorkingError, UnavailableToken)
 
 load_dotenv()
 
@@ -43,7 +45,7 @@ def send_message(bot, message):
     """Функция отправки сообщений."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-    except exceptions.MessageSendError as error:
+    except MessageSendError as error:
         logger.error(f'Не получается отправить сообщние: {error}')
 
 
@@ -53,15 +55,15 @@ def get_api_answer(current_timestamp):
     params = {'from_date': timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    except exceptions.APIUnexpectedHTTPStatus:
+    except APIUnexpectedHTTPStatus:
         logger.error('Сбой при запросе к эндпоинту')
     if response.status_code != HTTPStatus.OK:
         message = 'Не получается подключиться к ENDPOINT'
         logger.error(message)
-        raise exceptions.APIUnexpectedHTTPStatus(message)
+        raise APIUnexpectedHTTPStatus(message)
     try:
         return response.json()
-    except exceptions.JSONError:
+    except JSONError:
         logger.error('Формат не Json')
 
 
@@ -73,11 +75,11 @@ def check_response(response):
     except KeyError as error:
         message = f'Нет доступа по ключу: {error}'
         logger.error(message)
-        raise exceptions.KeyNotFoundError(message)
+        raise KeyNotFoundError(message)
     if not isinstance(list_of_homeworks, list):
         message = 'homeworks не является списком'
         logger.error(message)
-        raise exceptions.APIFormatError(message)
+        raise APIFormatError(message)
     return list_of_homeworks
 
 
@@ -97,7 +99,7 @@ def parse_status(homework: dict):
     if homework_status not in HOMEWORK_VERDICTS:
         message = 'Ключ из homewor_status не обнаружен в  HOMEWORK_VERDICTS'
         logger.error(message)
-        raise exceptions.KeyNotFoundError(message)
+        raise KeyNotFoundError(message)
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
@@ -111,7 +113,7 @@ def main():
     if not check_tokens():
         message = 'Отсутствуют переменные окружения'
         logger.critical(message)
-        raise exceptions.UnavailableToken(message)
+        raise UnavailableToken(message)
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = 0
@@ -120,7 +122,7 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
-        except exceptions.APIUnexpectedHTTPStatus as error:
+        except APIUnexpectedHTTPStatus as error:
             logger.error(error)
         try:
             homeworks = check_response(response)
@@ -132,7 +134,7 @@ def main():
             else:
                 logger.debug('Статус не обновлен')
 
-        except exceptions.NotWorkingError as error:
+        except NotWorkingError as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
         finally:
