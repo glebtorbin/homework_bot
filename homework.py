@@ -7,11 +7,10 @@ import telegram
 from http import HTTPStatus
 
 import requests
+import simplejson
 from dotenv import load_dotenv
 
-from exceptions import (APIFormatError, APIUnexpectedHTTPStatus,
-                        JSONError, KeyNotFoundError,
-                        MessageSendError, NotWorkingError, UnavailableToken)
+import exceptions
 
 load_dotenv()
 
@@ -20,12 +19,12 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_TIME: int = 600
+TELEGRAM_RETRY_TIME: int = 600
 ENDPOINT = os.getenv('ENDPOINT')
-HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+HEADERS: dict = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_STATUSES = {
+HOMEWORK_VERDICTS: dict = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -45,7 +44,7 @@ def send_message(bot, message):
     """Функция отправки сообщений."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-    except MessageSendError as error:
+    except exceptions.MessageSendError as error:
         logger.error(f'Не получается отправить сообщние: {error}')
 
 
@@ -55,15 +54,15 @@ def get_api_answer(current_timestamp):
     params = {'from_date': timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    except APIUnexpectedHTTPStatus:
+    except exceptions.APIUnexpectedHTTPStatus:
         logger.error('Сбой при запросе к эндпоинту')
     if response.status_code != HTTPStatus.OK:
         message = 'Не получается подключиться к ENDPOINT'
         logger.error(message)
-        raise APIUnexpectedHTTPStatus(message)
+        raise exceptions.APIUnexpectedHTTPStatus(message)
     try:
         return response.json()
-    except JSONError:
+    except simplejson.errors.JSONDecodeError:
         logger.error('Формат не Json')
 
 
@@ -75,11 +74,11 @@ def check_response(response):
     except KeyError as error:
         message = f'Нет доступа по ключу: {error}'
         logger.error(message)
-        raise KeyNotFoundError(message)
+        raise exceptions.KeyNotFoundError(message)
     if not isinstance(list_of_homeworks, list):
         message = 'homeworks не является списком'
         logger.error(message)
-        raise APIFormatError(message)
+        raise exceptions.APIFormatError(message)
     return list_of_homeworks
 
 
@@ -95,11 +94,11 @@ def parse_status(homework: dict):
     except KeyError as error:
         message = f'Ошибка доступа по ключу status: {error}'
         logger.error(message)
-    verdict = HOMEWORK_STATUSES[homework_status]
-    if homework_status not in HOMEWORK_STATUSES:
+    verdict = HOMEWORK_VERDICTS[homework_status]
+    if homework_status not in HOMEWORK_VERDICTS:
         message = 'Ключ из homewor_status не обнаружен в  HOMEWORK_VERDICTS'
         logger.error(message)
-        raise KeyNotFoundError(message)
+        raise exceptions.KeyNotFoundError(message)
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
@@ -113,16 +112,16 @@ def main():
     if not check_tokens():
         message = 'Отсутствуют переменные окружения'
         logger.critical(message)
-        raise UnavailableToken(message)
+        raise exceptions.UnavailableToken(message)
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time() - 2629743)
+    current_timestamp = int(time.time() - 2629743)  # -1 месяц
     last_hw_status = ''
 
     while True:
         try:
             response = get_api_answer(current_timestamp)
-        except APIUnexpectedHTTPStatus as error:
+        except exceptions.APIUnexpectedHTTPStatus as error:
             logger.error(error)
         try:
             homeworks = check_response(response)
@@ -134,11 +133,11 @@ def main():
             else:
                 logger.debug('Статус не обновлен')
 
-        except NotWorkingError as error:
+        except exceptions.NotWorkingError as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
         finally:
-            time.sleep(RETRY_TIME)
+            time.sleep(TELEGRAM_RETRY_TIME)
 
 
 if __name__ == '__main__':
