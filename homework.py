@@ -18,10 +18,10 @@ load_dotenv()
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-
-TELEGRAM_RETRY_TIME: int = 600
-ENDPOINT = os.getenv('ENDPOINT')
-HEADERS: dict = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+# не могу ничего делать с переменными, тк ломаются тесты на сайте
+RETRY_TIME = 600
+ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
+HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
 HOMEWORK_VERDICTS: dict = {
@@ -137,7 +137,7 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
         finally:
-            time.sleep(TELEGRAM_RETRY_TIME)
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
