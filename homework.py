@@ -18,9 +18,10 @@ load_dotenv()
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-# не могу ничего делать с переменными, тк ломаются тесты на сайте
-RETRY_TIME = 600
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
+
+ONE_MONTH = 2629743
+TELEGRAM_RETRY_TIME = 600
+ENDPOINT = os.getenv('ENDPOINT')
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
@@ -115,7 +116,7 @@ def main():
         raise exceptions.UnavailableToken(message)
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time() - 2629743)  # -1 месяц
+    current_timestamp = int(time.time() - ONE_MONTH)
     last_hw_status = ''
 
     while True:
@@ -137,7 +138,7 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
         finally:
-            time.sleep(RETRY_TIME)
+            time.sleep(TELEGRAM_RETRY_TIME)
 
 
 if __name__ == '__main__':
